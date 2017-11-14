@@ -66,9 +66,9 @@ var addUser = function (socket, pseudo, status)
         if ( usersList[i].pseudo == socket.pseudo ) return 'already_exists';
     }
 
-    if ( (socket.pseudo.indexOf('<') == -1) && (socket.pseudo.indexOf('>') == -1) && socket.pseudo.length > 1 && socket.pseudo.length < maxPseudoLength && socket.pseudo.indexOf(' ') != -1)
+    if ( (socket.pseudo.indexOf('<') == -1) && (socket.pseudo.indexOf('>') == -1) && socket.pseudo.length > 1 && socket.pseudo.length < maxPseudoLength)
     {
-        usersList.push( {socket: socket, pseudo:socket.pseudo, id:socket.id, status:socket.status, connDate:'not_impl', lastMsg:'not_impl', roles: socket.role } );
+        usersList.push( {pseudo:socket.pseudo, id:socket.id, status:socket.status, connDate:'not_impl', lastMsg:'not_impl', roles: socket.role } );
         return 'ok';
     } else {
         return 'bad_name';
@@ -100,7 +100,7 @@ var banUser = function (username, reason)
 
     if (i != -1)
     {
-        var user = usersList[i].socket
+        var user = usersList[i].usersocket
         user.emit('server-msg', 'Vous avez été banni pour ' + reason);
         user.broadcast.emit('server-msg', username + ' a été banni pour ' + reason);
         user.disconnect(true);
@@ -120,8 +120,8 @@ var exec = function (socket, command)
             for (var i = 2 ; i < params.length ; i++) {
                 reason += params[i];
             }
-            reason == '' ? reason = 'raison non spécifiée':;
-            
+            reason = (reason == '') ? 'raison non spécifiée' : reason;
+
             banUser(params[1]);
             break;
         case '/say':
