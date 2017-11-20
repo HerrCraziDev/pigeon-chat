@@ -26,7 +26,8 @@ const mimeType = {
    '.pdf': 'application/pdf',
    '.doc': 'application/msword',
    '.eot': 'appliaction/vnd.ms-fontobject',
-   '.ttf': 'application/font-sfnt'
+   '.ttf': 'application/font-sfnt',
+   '.otf': 'application/x-font-opentype'
 };
 
 //Déprécié
@@ -60,6 +61,8 @@ var addUser = function (socket, pseudo, status)
     socket.status = status;    //Statuts : connected, admin, modo, afk, absent
     socket.role = ['user'];
 
+    socket.join('public');
+    socket.currentRoom = 'public';
 
     for (var i in usersList)
     {
@@ -184,6 +187,7 @@ const server = http.createServer( (req, resp) => {
                 resp.write("NJS NUI [Beta] Error. 500 Internal Error\nCode : "+err.code);
             }
         } else {
+            console.log(path + " : " + getMime(path));
             resp.writeHead( 200, { "Content-Type" : getMime(path) } );
             resp.write(data);
         }
@@ -225,10 +229,12 @@ io.on('connection', (socket, pseudo) => {
 
     });
 
-    socket.join('public'); //Par défaut connecté au salon public de la catégorie General.
+    //socket.join('public'); //Par défaut connecté au salon public de la catégorie General.
 
     socket.on('message', (message) => {
         console.log(socket.pseudo + ' : ' + encode(message));
+        let rooms = socket.rooms;
+        console.log(rooms);
         if ( message.length > 0 && message.length < maxMsgLength && findUser(socket.pseudo) != -1 ) //Vérifier le contenu du message et l'authentification de l'utilisateur
         {
             if ( message.indexOf('/') == 0 ) //Est ce une commande?
@@ -245,6 +251,16 @@ io.on('connection', (socket, pseudo) => {
             }
         }
     });
+
+    socket.on('set-room', (room) => {
+        socket.leave(socket.currentRoom);
+
+        socket.join(room);
+        socket.currentRoom = room;
+
+        let rooms = socket.rooms;
+        console.log(rooms);
+    })
 
     socket.on('god-auth', (pseudo, hash) => {
 
